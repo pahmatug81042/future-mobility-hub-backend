@@ -24,4 +24,3 @@ export const updatePreferences = async (req, res, next) => {
         next(err);
     }
 };
-
