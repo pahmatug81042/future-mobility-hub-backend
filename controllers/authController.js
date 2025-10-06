@@ -19,3 +19,23 @@ export const register = async (req, res, next) => {
         next(err);
     }
 };
+
+// Login a user
+export const login = async (req, res, next) => {
+    try {
+        const email = sanitizeInput(req.body.email);
+        const password = sanitizeInput(req.body.password);
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ success: false, message: 'Invalid credentials' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ success: false, message: 'Invalid credentials' });
+
+        const token = generateToken({ id: user._id, role: user.role });
+        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict', maxAge: 15 * 60 * 1000 });
+        res.json({ success: true, message: 'Login successful' });
+    } catch (err) {
+        next(err);
+    }
+};
