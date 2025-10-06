@@ -4,7 +4,12 @@ dotenv.config();
 
 const client = new Client({});
 
-// Fetch route from Google Maps API
+/**
+ * Fetch route from Google Maps API
+ * @param {string} origin
+ * @param {string} destination
+ * @returns route object
+ */
 export const getRoute = async (origin, destination) => {
     try {
         const response = await client.directions({
