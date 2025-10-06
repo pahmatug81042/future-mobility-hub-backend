@@ -27,3 +27,18 @@ export const getTrips = async (req, res, next) => {
         next(err);
     }
 };
+
+// Get single trip by ID with ObjectId validation
+export const getTripById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'Invalid trip ID' });
+
+        const trip = await Trip.findById(id);
+        if (!trip) return res.status(404).json({ success: false, message: 'Trip not found' });
+
+        res.json({ success: true, trip });
+    } catch (err) {
+        next(err);
+    }
+};
