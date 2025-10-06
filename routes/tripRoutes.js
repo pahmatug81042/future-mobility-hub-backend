@@ -1,6 +1,6 @@
 import express from 'express';
-import { body, param } from 'express-validator';
-import { createTrip, getTrips, getTripById } from '../controllers/tripController.js';
+import { body, param, query } from 'express-validator';
+import { createTrip, getTrips, getTripById, suggestOptimalRoute } from '../controllers/tripController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { validateRequest } from '../middlewares/validateRequest.js';
 
@@ -15,7 +15,7 @@ router.post(
         body('destination').notEmpty().withMessage('Destination is required'),
         body('scheduledTime').notEmpty().withMessage('Scheduled time is required').isISO8601().toDate(),
         body('mode').optional().isString(),
-        body('notes').optional().isString(),
+        body('notes').optional().isString()
     ],
     validateRequest,
     createTrip
@@ -31,6 +31,18 @@ router.get(
     param('id').isMongoId().withMessage('Invalid trip ID'),
     validateRequest,
     getTripById
+);
+
+// Predictive optimal route
+router.get(
+    '/optimal-route',
+    authMiddleware,
+    [
+        query('origin').notEmpty().withMessage('Origin is required'),
+        query('destination').notEmpty().withMessage('Destination is required')
+    ],
+    validateRequest,
+    suggestOptimalRoute
 );
 
 export default router;
