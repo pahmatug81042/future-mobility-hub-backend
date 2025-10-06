@@ -1,19 +1,35 @@
 import Trip from '../models/Trip.js';
 
-// Simple traffic prediction based on historical trips
+/**
+ * Predict traffic congestion for a location
+ * Returns a score and classification: 'low', 'medium', 'high'
+ * Optionally uses a lookback period from .env
+ */
 export const predictTraffic = async (location) => {
     const now = new Date();
-    const hour = now.getHours();
+    const currentHour = now.getHours();
 
-    const trips = await Trip.countDocuments({
+    // Lookback hours (default 24)
+    const lookbackHours = parseInt(process.env.TRAFFIC_PREDICTION_LOOKBACK_HOURS || '24');
+
+    const startTime = new Date(now.getTime() - lookbackHours * 60 * 60 * 1000);
+
+    // Count trips per hour for location
+    const trips = await Trip.find({
         origin: location,
-        scheduledTime: {
-            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour),
-            $lt: new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour + 1)
-        }
+        scheduledTime: { $gte: startTime, $lte: now }
     });
 
-    if (trips < 5) return 'low';
-    if (trips < 15) return 'medium';
-    return 'high';
+    // Compute weighted traffic: more recent trips have higher weight
+    let weightedCount = 0;
+    trips.forEach(trip => {
+        const hoursAgo = (now - new Date(trip.scheduledTime)) / (1000 * 60 * 60);
+        const weight = 1 - hoursAgo / lookbackHours; // Linear decay
+        weightedCount += weight;
+    });
+
+    // Determine traffic level
+    if (weightedCount < 5) return { level: 'low', score: weightedCount.toFixed(2) };
+    if (weightedCount < 15) return { level: 'medium', score: weightedCount.toFixed(2) };
+    return { level: 'high', score: weightedCount.toFixed(2) };
 };
