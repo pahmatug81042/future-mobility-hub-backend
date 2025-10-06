@@ -11,3 +11,15 @@ export const getDashboardStats = async (req, res, next) => {
         next(err);
     }
 };
+
+// Get vehicle status counts
+export const getVehicleStatusCounts = async (req, res, next) => {
+    try {
+        const statuses = await Vehicle.aggregate([
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+        res.json({ success: true, statuses });
+    } catch (err) {
+        next(err);
+    }
+};
