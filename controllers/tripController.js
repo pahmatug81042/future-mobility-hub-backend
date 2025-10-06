@@ -17,3 +17,13 @@ export const createTrip = async (req, res, next) => {
         next(err);
     }
 };
+
+// Get all trips of logged-in user
+export const getTrips = async (req, res, next) => {
+    try {
+        const trips = await Trip.find({ userId: req.user.id });
+        res.json({ success: true, trips });
+    } catch (err) {
+        next(err);
+    }
+};
