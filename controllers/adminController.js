@@ -23,3 +23,15 @@ export const getVehicleStatusCounts = async (req, res, next) => {
         next(err);
     }
 };
+
+// Get trip counts by mode
+export const getTripModeCounts = async (req, res, next) => {
+    try {
+        const modes = await Trip.aggregate([
+            { $group: { _id: '$mode', count: { $sum: 1 } } }
+        ]);
+        res.json({ success: true, modes });
+    } catch (err) {
+        next(err);
+    }
+};
